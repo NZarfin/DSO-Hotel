@@ -6,7 +6,7 @@ pipeline {
         MYSQL_IMAGE = 'mysql:dev'
         DEV_BRANCH = 'dev2'
         DEPLOY_BRANCH = 'production'
-        HTTP_STATUS = 0
+        HTTP_STATUS = 0  // Add environment variable to store HTTP status
     }
 
     stages {
@@ -29,7 +29,7 @@ pipeline {
                 '''
             }
         }
-        
+
         stage('Run Linting on All of Source Code Files') {
             steps {
                 echo 'Running linting on Flask app...'
@@ -48,6 +48,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Run Unit Tests') {
             steps {
                 echo 'Running unit tests...'
@@ -60,36 +61,42 @@ pipeline {
         stage('Check with httpd') {
             steps {
                 echo 'Running security checks with httpd and false data...'
-                sh '''
-                    docker run -d --name my_flask_app -p 8010:8081 ${FLASK_IMAGE} flask run
-                    
-                    # Wait for the app to start
-                    sleep 5
-                    
-                    # Basic httpd check
-                    STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" http://localhost:8010)
-                    
-                    if [ "$STATUS" -ne 200 ]; then
-                        echo "App is not responding correctly! Status: $STATUS"
-                        exit 1
-                    fi
-                    
-                    echo "App is running. Checking for false data insertion..."
-                    
-                    # Attempt to inject false data
-                    RESPONSE=$(curl -s -X POST http://localhost:8081/insert_fake_data -d '{"name": "fake_data"}' -H "Content-Type: application/json")
-                    
-                    if echo "$RESPONSE" | grep -q "Error"; then
-                        echo "Error in inserting false data: $RESPONSE"
-                        exit 1
-                    else
-                        echo "False data successfully blocked!"
-                    fi
-
-                    # Clean up
-                    docker stop my_flask_app
-                    docker rm my_flask_app
-                '''
+                script {
+                    try {
+                        sh '''
+                            docker run -d --name my_flask_app -p 8010:8081 ${FLASK_IMAGE} flask run
+                            
+                            # Wait for the app to start
+                            sleep 5
+                            
+                            # Basic httpd check
+                            STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" http://localhost:8010)
+                            
+                            if [ "$STATUS" -ne 200 ]; then
+                                echo "App is not responding correctly! Status: $STATUS"
+                                exit 1
+                            fi
+                            
+                            echo "App is running. Checking for false data insertion..."
+                            
+                            # Attempt to inject false data
+                            RESPONSE=$(curl -s -X POST http://localhost:8010/insert_fake_data -d '{"name": "fake_data"}' -H "Content-Type: application/json")
+                            
+                            if echo "$RESPONSE" | grep -q "Error"; then
+                                echo "Error in inserting false data: $RESPONSE"
+                                exit 1
+                            else
+                                echo "False data successfully blocked!"
+                            fi
+                        '''
+                        env.HTTP_STATUS = 200  // Set status to 200 if check passes
+                    } catch (Exception e) {
+                        env.HTTP_STATUS = 500  // Set status to 500 if it fails
+                    } finally {
+                        sh 'docker stop my_flask_app'
+                        sh 'docker rm my_flask_app'
+                    }
+                }
             }
         }
 
@@ -98,12 +105,20 @@ pipeline {
                 branch "${DEV_BRANCH}"
             }
             steps {
-                echo "Pushing successful changes from ${DEV_BRANCH} to ${DEPLOY_BRANCH}..."
-                sh '''
-                    git checkout ${DEPLOY_BRANCH}
-                    git merge ${DEV_BRANCH}
-                    git push origin ${DEPLOY_BRANCH}
-                '''
+                script {
+                    if (env.HTTP_STATUS == '200') {
+                        echo "HTTP check passed with status code 200. Pushing changes..."
+                        sh '''
+                            git checkout ${DEPLOY_BRANCH}
+                            git merge ${DEV_BRANCH}
+                            git push origin ${DEPLOY_BRANCH}
+                        '''
+                    } else {
+                        echo "HTTP check failed, skipping push to deployment branch."
+                        currentBuild.result = 'FAILURE'
+                        error('HTTP check failed. Not pushing to deployment branch.')
+                    }
+                }
             }
         }
 
