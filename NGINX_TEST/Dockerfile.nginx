@@ -1,0 +1,17 @@
+# Use an official Nginx image as the base image
+FROM nginx:alpine
+
+# Install Apache HTTP server (httpd)
+RUN apk update && apk add apache2
+
+# Create a directory for your Flask app's static files or proxy
+RUN mkdir -p /usr/share/nginx/html
+
+# Copy your default nginx.conf for reverse proxy to Flask
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose port 80 for Nginx and 8080 for Apache HTTPD
+EXPOSE 80 8080
+
+# Run both Nginx and httpd
+CMD /usr/sbin/httpd && nginx -g 'daemon off;'

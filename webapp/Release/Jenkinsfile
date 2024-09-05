@@ -1,0 +1,140 @@
+pipeline {
+    agent any
+
+    environment {
+        FLASK_IMAGE = 'f:1'
+        MYSQL_IMAGE = 'mysql:1'
+        DEV_BRANCH = 'dev'
+        DEPLOY_BRANCH = 'deploy'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    def branch = env.BRANCH_NAME
+                    echo "Checking out branch: ${DEV_BRANCH}"
+                    git branch: "${DEV_BRAJ}", url: ''
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                echo 'Building Docker images for Flask and MySQL...'
+                sh '''
+                    docker build -t ${FLASK_IMAGE} -f Dockerfile.flask .
+                    docker build -t ${MYSQL_IMAGE} -f Dockerfile.mysql .
+                '''
+            }
+        }
+
+        stage('Run Linting') {
+            steps {
+                echo 'Running linting on Flask app...'
+                sh '''
+                    docker run --rm ${FLASK_IMAGE} flake8 /app
+                    docker run --rm ${FLASK_IMAGE} pylint /app
+                '''
+            }
+        }
+
+        stage('Run Unit Tests') {
+            steps {
+                echo 'Running unit tests...'
+                sh '''
+                    docker run --rm ${FLASK_IMAGE} python3 -m unittest discover
+                '''
+            }
+        }
+
+        stage('Check with httpd') {
+            steps {
+                echo 'Running security checks with httpd and false data...'
+                sh '''
+                    docker run -d --name my_flask_app -p 8081:8081 ${FLASK_IMAGE}
+                    
+                    # Wait for the app to start
+                    sleep 5
+                    
+                    # Basic httpd check
+                    STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" http://localhost:8081)
+                    
+                    if [ "$STATUS" -ne 200 ]; then
+                        echo "App is not responding correctly! Status: $STATUS"
+                        exit 1
+                    fi
+                    
+                    echo "App is running. Checking for false data insertion..."
+                    
+                    # Attempt to inject false data
+                    RESPONSE=$(curl -s -X POST http://localhost:8081/insert_fake_data -d '{"name": "fake_data"}' -H "Content-Type: application/json")
+                    
+                    if echo "$RESPONSE" | grep -q "Error"; then
+                        echo "Error in inserting false data: $RESPONSE"
+                        exit 1
+                    else
+                        echo "False data successfully blocked!"
+                    fi
+
+                    # Clean up
+                    docker stop my_flask_app
+                    docker rm my_flask_app
+                '''
+            }
+        }
+
+        stage('Push to Deployment Branch') {
+            when {
+                branch "${DEV_BRANCH}"
+            }
+            steps {
+                echo "Pushing successful changes from ${DEV_BRANCH} to ${DEPLOY_BRANCH}..."
+                sh '''
+                    git checkout ${DEPLOY_BRANCH}
+                    git merge ${DEV_BRANCH}
+                    git push origin ${DEPLOY_BRANCH}
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                branch "${DEPLOY_BRANCH}"
+            }
+            steps {
+                echo 'Deploying to production...'
+                sh 'docker-compose up -d'
+            }
+        }
+
+        stage('Clean Up') {
+            steps {
+                echo 'Cleaning up Docker images and containers...'
+                sh '''
+                    docker system prune -f
+                    docker rmi ${FLASK_IMAGE} ${MYSQL_IMAGE}
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed."
+            archiveArtifacts artifacts: '**/logs/*.log', allowEmptyArchive: true
+            cleanWs()
+        }
+
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+
+        failure {
+            echo 'Pipeline failed!'
+            emailext to: 'n.zrfin@icloud.com',
+                     subject: "Build failed in Jenkins: ${env.BUILD_URL}",
+                     body: "Check Jenkins logs for more details."
+        }
+    }
+}
