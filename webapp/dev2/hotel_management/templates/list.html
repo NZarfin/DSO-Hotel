@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reservations - Hotel Solaris</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+  </head>
+  <body style="font-family: Arial, sans-serif; background-color: #E2E2E2; transition: background-color 0.5s ease;">
+  
+  <section class="section" style="padding: 50px 20px;">
+
+    <!-- Hotel Solaris Name above image -->
+    <div class="container" style="text-align: center; margin-bottom: 20px;">
+        <h1 class="title" style="font-size: 3rem; color: #303E4E; text-align: left; animation: fadeIn 1.5s ease-in;">$> the dso -inn</h1>
+        <h2 class="title" style="font-size: 1.5rem; color: #112131; text-align: left; animation: fadeIn 3s ease-in-out;">Hotel Reservations Management System - BIU DevSecOps --NadavZarfin</h2>
+        <h3 class="title" style="font-size: 1rem; color: #112131; text-align: left; animation: fadeIn 3s ease-in-out;">"Where security - checks in before you do..."</h3>
+    </div>
+
+    <div class="container" style="position: relative; background-color: #d1e8e23b; padding: 0; border-radius: 12px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); overflow: hidden;">
+        <!-- Hotel Image with overlay -->
+        <!--<img src="https://ibb.co/zJX3g7X" alt="Hotel Solaris Lobby" style="width:100%; height:auto;">
+        -->
+        <img src="https://i.ibb.co/0tC0LFC/DALL-E-2024-09-05-01-42-54-A-luxurious-hotel-lobby-with-a-modern-sleek-design-The-lobby-features-lar.webp" alt="Hotel Solaris Lobby" style="width:55%; height:fit-content; border-radius: 2%;">
+        <!-- Dark Overlay -->
+        <div style="position:absolute; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.221); z-index: 1;"></div>
+        <!-- Tagline Text animated onto the image -->
+        <div style="position: absolute; top: 35%;left:68%; transform: translate(-25%, -25%); text-align: center; z-index: 2;">
+            <h1 class="title" style="font-size: 1.7rem; color: #303E4E; font-style: oblique; animation: slideIn 2s ease-out;">Welcome to The DSO Inn!</h1>
+            <p style="font-size: 0.9rem; color: white; animation: slideIn 2s ease-out; text-align: left;">Where pipelines flow smoother than morning coffee, and servers run tighter than hotel sheets! At The DSO Inn, I’ve mixed the perfect blend of CI/CD magic and DevSecOps wizardry to automate, deploy, and secure apps faster than you can check out of a hotel.</p><br />
+            <p style="font-size: 0.9rem; color: white; animation: slideIn 2s ease-out; text-align: left;">Need continuous integration? We’ve got it on tap. Want security baked into every build? It’s on the house. My final project isn’t just a place—it’s a well-oiled machine designed to impress, built to perform, and always delivering a seamless experience (and maybe a mint on your pillow).</p><br />
+            <p style="font-size: 1.0rem; color: white; animation: slideIn 2s ease-out; text-align: left;font-style: italic;">Come in, kick back, and watch your code go live in style!</p>
+            
+        </div>
+    </div>
+    
+    <div class="container" style="background-color: #bbcacf; padding: 30px; border-radius: 12px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); transition: transform 0.5s ease; margin-top: 20px;">
+        <h1 class="title" style="font-size: 2.5em; color: #2c3e50; margin-bottom: 20px; text-align: center; animation: fadeIn 1s ease-in-out;">Reservations</h1>
+
+        <a class="button is-primary" href="{{ url_for('main.create_get') }}" style="margin-bottom: 20px; transition: 0.3s ease;">Create New</a> <br />
+        
+    <table class="table is-fullwidth is-hoverable" style="background-color: #fff; border-radius: 12px; transition: all 0.3s ease;">
+        <thead>
+          <tr>
+            <th style="color: #34495e;">Reference Number</th>
+            <th style="color: #34495e;">Guest Name</th>
+            <th style="color: #34495e;">Arrive</th>
+            <th style="color: #34495e;">Depart</th>
+            <th style="color: #34495e;">Room Type</th>
+            <th style="color: #34495e;">Breakfast</th>
+            <th style="color: #34495e;">Airport Pickup Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in bookings %}
+          <tr style="transition: background-color 0.3s ease;">
+            <th><a href="{{ url_for('main.update_get', reference_number=item.reference_number) }}" style="color: #2980b9; text-decoration: none; transition: color 0.3s ease;">{{ item.reference_number }}</a></th>
+            <td>{{ item.name }}</td>
+            <td>{{ item.check_in }}</td>
+            <td>{{ item.check_out }}</td>
+            <td>{{ item.description }}</td>
+            <td>{% if item.breakfast %}Yes{% else %}No{% endif %}</td>
+            <td>{% if item.airport_pickup_time %}{{ item.airport_pickup_time }}{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  </body>
+</html>
