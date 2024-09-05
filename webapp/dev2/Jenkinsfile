@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        FLASK_IMAGE = 'f:1'
-        MYSQL_IMAGE = 'mysql:1'
+        FLASK_IMAGE = 'flask:dev'
+        MYSQL_IMAGE = 'mysql:dev'
         DEV_BRANCH = 'dev'
         DEPLOY_BRANCH = 'deploy'
     }
