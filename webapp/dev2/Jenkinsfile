@@ -24,8 +24,8 @@ pipeline {
             steps {
                 echo 'Building Docker images for Flask and MySQL...'
                 sh '''
-                    echo $pwd
-                    echo $ls
+                    echo pwd
+                    echo ls
                     docker build . -t ${FLASK_IMAGE} -f Dockerfile.flask2
                     docker build . -t ${MYSQL_IMAGE} -f Dockerfile.mysql
                 '''
