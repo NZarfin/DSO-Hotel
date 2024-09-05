@@ -4,17 +4,18 @@ pipeline {
     environment {
         FLASK_IMAGE = 'flask:dev'
         MYSQL_IMAGE = 'mysql:dev'
-        DEV_BRANCH = 'dev'
-        DEPLOY_BRANCH = 'deploy'
+        DEV_BRANCH = 'dev2'
+        DEPLOY_BRANCH = 'production'
+        HTTP_STATUS = 0
     }
 
     stages {
-        stage('Checkout') {
+        stage('Git Branch Checkout') {
             steps {
                 script {
                     def branch = env.BRANCH_NAME
                     echo "Checking out branch: ${DEV_BRANCH}"
-                    git branch: "${DEV_BRAJ}", url: ''
+                    git branch: "${DEV_BRANCH}", url: 'https://github.com/NZarfin/DSO-Hotel.git'
                 }
             }
         }
@@ -23,27 +24,35 @@ pipeline {
             steps {
                 echo 'Building Docker images for Flask and MySQL...'
                 sh '''
-                    docker build -t ${FLASK_IMAGE} -f Dockerfile.flask .
-                    docker build -t ${MYSQL_IMAGE} -f Dockerfile.mysql .
+                    docker build . -t ${FLASK_IMAGE} -f Dockerfile.flask2
+                    docker build . -t ${MYSQL_IMAGE} -f Dockerfile.mysql
                 '''
             }
         }
-
-        stage('Run Linting') {
+        
+        stage('Run Linting on All of Source Code Files') {
             steps {
                 echo 'Running linting on Flask app...'
                 sh '''
-                    docker run --rm ${FLASK_IMAGE} flake8 /app
-                    docker run --rm ${FLASK_IMAGE} pylint /app
+                    docker run --rm ${FLASK_IMAGE} flake8 ../code | tee outputs-log/flake8/flake8_output_$(date +"%Y%m%d_%H%M%S").log
+                    docker run --rm ${FLASK_IMAGE} pylint ../code/hotel_management/ | tee outputs-log/pylint/pylint_output_$(date +"%Y%m%d_%H%M%S").log
                 '''
             }
         }
 
+        stage('Run Security Checks') {
+            steps {
+                echo 'Running security checks on Flask app...'
+                sh '''
+                    docker run --rm ${FLASK_IMAGE} bandit -r ../code | tee outputs-log/bandit/bandit_output_$(date +"%Y%m%d_%H%M%S").log
+                '''
+            }
+        }
         stage('Run Unit Tests') {
             steps {
                 echo 'Running unit tests...'
                 sh '''
-                    docker run --rm ${FLASK_IMAGE} python3 -m unittest discover
+                    echo "Dev1 is producing tests for the Flask app and will integrate the rest of the tests..."
                 '''
             }
         }
@@ -52,13 +61,13 @@ pipeline {
             steps {
                 echo 'Running security checks with httpd and false data...'
                 sh '''
-                    docker run -d --name my_flask_app -p 8081:8081 ${FLASK_IMAGE}
+                    docker run -d --name my_flask_app -p 8010:8081 ${FLASK_IMAGE} flask run
                     
                     # Wait for the app to start
                     sleep 5
                     
                     # Basic httpd check
-                    STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" http://localhost:8081)
+                    STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" http://localhost:8010)
                     
                     if [ "$STATUS" -ne 200 ]; then
                         echo "App is not responding correctly! Status: $STATUS"

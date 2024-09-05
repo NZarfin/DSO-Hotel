@@ -1,0 +1,31 @@
+Run started:2024-09-05 14:07:48.752891
+
+Test results:
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.9/blacklists/blacklist_calls.html#b311-random
+   Location: ../code/hotel_management/routes.py:84:8
+83	    reference_number = "".join(
+84	        random.choices(string.ascii_uppercase + string.digits, k=10)
+85	    )
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 219
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 1
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 1
+Files skipped (0):

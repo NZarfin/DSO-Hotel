@@ -1,0 +1,33 @@
+../code/hotel_management/__init__.py:1:24: W291 trailing whitespace
+../code/hotel_management/__init__.py:15:15: W292 no newline at end of file
+../code/hotel_management/db.py:1:1: F401 'click' imported but unused
+../code/hotel_management/db.py:5:1: F401 'flask.current_app' imported but unused
+../code/hotel_management/db.py:6:1: F401 'flask.cli.with_appcontext' imported but unused
+../code/hotel_management/db.py:8:1: E302 expected 2 blank lines, found 1
+../code/hotel_management/db.py:16:1: W293 blank line contains whitespace
+../code/hotel_management/db.py:17:13: E265 block comment should start with '# '
+../code/hotel_management/db.py:18:1: W293 blank line contains whitespace
+../code/hotel_management/db.py:20:1: W293 blank line contains whitespace
+../code/hotel_management/db.py:23:1: E302 expected 2 blank lines, found 1
+../code/hotel_management/db.py:27:29: W291 trailing whitespace
+../code/hotel_management/db.py:30:1: E302 expected 2 blank lines, found 1
+../code/hotel_management/routes.py:6:15: W291 trailing whitespace
+../code/hotel_management/routes.py:7:14: W291 trailing whitespace
+../code/hotel_management/routes.py:8:13: W291 trailing whitespace
+../code/hotel_management/routes.py:9:21: W291 trailing whitespace
+../code/hotel_management/routes.py:17:1: E302 expected 2 blank lines, found 1
+../code/hotel_management/routes.py:26:1: E302 expected 2 blank lines, found 1
+../code/hotel_management/routes.py:50:1: E302 expected 2 blank lines, found 1
+../code/hotel_management/routes.py:116:1: E302 expected 2 blank lines, found 1
+../code/hotel_management/routes.py:121:1: E302 expected 2 blank lines, found 1
+../code/hotel_management/routes.py:125:1: W293 blank line contains whitespace
+../code/hotel_management/routes.py:144:1: W293 blank line contains whitespace
+../code/hotel_management/routes.py:146:1: W293 blank line contains whitespace
+../code/hotel_management/routes.py:150:1: W293 blank line contains whitespace
+../code/hotel_management/routes.py:154:1: E302 expected 2 blank lines, found 1
+../code/hotel_management/routes.py:197:1: W293 blank line contains whitespace
+../code/hotel_management/routes.py:198:80: E501 line too long (82 > 79 characters)
+../code/hotel_management/routes.py:200:1: E302 expected 2 blank lines, found 1
+../code/hotel_management/routes.py:221:1: W293 blank line contains whitespace
+../code/hotel_management/routes.py:222:43: W292 no newline at end of file
+../code/wsgi.py:3:19: W292 no newline at end of file
